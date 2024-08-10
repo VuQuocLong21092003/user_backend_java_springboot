@@ -4,6 +4,7 @@ import com.example.user.dto.request.UserDto;
 import com.example.user.dto.response.ResponseData;
 import com.example.user.dto.response.ResponseError;
 import com.example.user.dto.response.UserResponse;
+import com.example.user.exception.ResourceNotFoundException;
 import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
 import com.example.user.service.AddressService;
@@ -90,15 +91,22 @@ public class UserController {
             @Min(value = 1, message = "userId must be greater than 0") @PathVariable("id") @Valid long id,
             @RequestBody UserResponse userResponse) {
 
-        User user = userRepository.findById(id).orElse(null);
-        user.setUsername(userResponse.getUsername());
-        user.setEmail(userResponse.getEmail());
-        user.setLastName(userResponse.getLastName());
-        user.setFirstName(userResponse.getFirstName());
-        user.setPhone(userResponse.getPhone());
-        userRepository.save(user);
-
-        return new ResponseData<>(HttpStatus.OK.value(), "Update id: " + id + " successful");
+        try {
+            User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+            user.setUsername(userResponse.getUsername());
+            user.setEmail(userResponse.getEmail());
+            user.setLastName(userResponse.getLastName());
+            user.setFirstName(userResponse.getFirstName());
+            user.setPhone(userResponse.getPhone());
+            userRepository.save(user);
+            return new ResponseData<>(HttpStatus.OK.value(), "Update Succesfull");
+        } catch (ResourceNotFoundException e) {
+            // Trả về phản hồi lỗi chi tiết nếu người dùng không được tìm thấy
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(),e.getMessage());
+        } catch (Exception e) {
+            // Trả về phản hồi lỗi chi tiết cho các lỗi khác
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), "Update failed");
+        }
 
 
     }
