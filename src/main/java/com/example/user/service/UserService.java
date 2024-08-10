@@ -16,4 +16,6 @@ public interface UserService {
     List<UserResponse> findAll(int page, int size, String sortBy);
 
     void deleteById(Long id);
+
+
 }

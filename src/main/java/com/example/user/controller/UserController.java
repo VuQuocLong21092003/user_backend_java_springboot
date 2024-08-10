@@ -3,6 +3,8 @@ package com.example.user.controller;
 import com.example.user.dto.request.UserDto;
 import com.example.user.dto.response.ResponseData;
 import com.example.user.dto.response.ResponseError;
+import com.example.user.dto.response.UserResponse;
+import com.example.user.model.User;
 import com.example.user.repository.UserRepository;
 import com.example.user.service.AddressService;
 import com.example.user.service.UserService;
@@ -44,7 +46,7 @@ public class UserController {
     public ResponseData<?> getUserByUsername(@RequestParam("name") @Valid String name) {
         try {
             return new ResponseData<>(HttpStatus.OK.value(), "User with name " + name, userService.findByUsername(name));
-        }catch (Exception e){
+        } catch (Exception e) {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
 
@@ -78,9 +80,27 @@ public class UserController {
             userService.deleteById(id);
             addressService.deleteAddressByUserId(id);
             return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete id: " + id + " successful");
-        }catch (Exception e){
-            return new  ResponseError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+        } catch (Exception e) {
+            return new ResponseError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseData<?> updateUserById(
+            @Min(value = 1, message = "userId must be greater than 0") @PathVariable("id") @Valid long id,
+            @RequestBody UserResponse userResponse) {
+
+        User user = userRepository.findById(id).orElse(null);
+        user.setUsername(userResponse.getUsername());
+        user.setEmail(userResponse.getEmail());
+        user.setLastName(userResponse.getLastName());
+        user.setFirstName(userResponse.getFirstName());
+        user.setPhone(userResponse.getPhone());
+        userRepository.save(user);
+
+        return new ResponseData<>(HttpStatus.OK.value(), "Update id: " + id + " successful");
+
+
     }
 
 
