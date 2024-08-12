@@ -2,10 +2,12 @@ package com.example.user.service.impl;
 
 import com.example.user.dto.request.AddressDto;
 import com.example.user.dto.request.UserDto;
+import com.example.user.dto.response.PageResponse;
 import com.example.user.dto.response.UserResponse;
 import com.example.user.exception.ResourceNotFoundException;
 import com.example.user.model.Address;
 import com.example.user.model.User;
+import com.example.user.repository.SearchRepository;
 import com.example.user.repository.UserRepository;
 import com.example.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final SearchRepository searchRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -95,18 +98,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> findAll(int page, int size, String sortBy) {
+    public PageResponse<?> findAll(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sortBy));
         Page<User> users = userRepository.findAll(pageable);
 
-        return users.stream()
-                .map(user -> new UserResponse(
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.getPhone(),
-                        user.getFirstName(),
-                        user.getLastName())).collect(Collectors.toList());
+        return converToPageResponse(users,pageable);
     }
+
+
 
     @Override
     public void deleteById(Long id) {
@@ -114,6 +113,12 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException("User with id " + id + " not found");
         }
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public PageResponse<?> getAllUserWithSortByColumnAndSearch(int pageNo, int pageSize, String search, String sortBy) {
+
+        return searchRepository.getAllUserWithSortByColumnAndSearch(pageNo, pageSize, search, sortBy);
     }
 
 
@@ -135,5 +140,24 @@ public class UserServiceImpl implements UserService {
         );
         return result;
 
+    }
+
+    private PageResponse<?> converToPageResponse(Page<User> users, Pageable pageable) {
+        List<UserResponse> userList = users.stream().map(
+                user -> UserResponse.builder()
+                        .id(user.getId())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .username(user.getUsername())
+                        .build()).toList();
+
+        return PageResponse.builder()
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .total(users.getTotalPages())
+                .items(userList)
+                .build();
     }
 }

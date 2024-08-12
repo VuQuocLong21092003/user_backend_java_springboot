@@ -13,6 +13,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Data
 public class UserResponse implements Serializable {
+
+    Long id;
+
     @NotBlank(message = "username must not blank")
     private String username;
 

@@ -56,7 +56,7 @@ public class UserController {
 
     @GetMapping("/getAll")
     public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "0", required = false) int page,
-                                         @Min(10) @RequestParam(defaultValue = "20", required = false) int size,
+                                         @Min(5) @RequestParam(defaultValue = "20", required = false) int size,
                                          @RequestParam String sortBy) {
         return ResponseEntity.ok().body(userService.findAll(page, size, sortBy));
 
@@ -102,12 +102,24 @@ public class UserController {
             return new ResponseData<>(HttpStatus.OK.value(), "Update Succesfull");
         } catch (ResourceNotFoundException e) {
             // Trả về phản hồi lỗi chi tiết nếu người dùng không được tìm thấy
-            return new ResponseData<>(HttpStatus.NOT_FOUND.value(),e.getMessage());
+            return new ResponseData<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
         } catch (Exception e) {
             // Trả về phản hồi lỗi chi tiết cho các lỗi khác
             return new ResponseData<>(HttpStatus.NOT_FOUND.value(), "Update failed");
         }
 
+
+    }
+
+    @GetMapping("/getAllUserWithSortByColumnAndSearch")
+    public ResponseData<?> getAllUserWithSortByColumnAndSearch(
+            @RequestParam(defaultValue = "0", required = false) int page,
+            @Min(5) @RequestParam(defaultValue = "20", required = false) int size,
+            @RequestParam( required = false) String search,
+            @RequestParam(required = false) String sortBy) {
+
+
+        return new ResponseData<>(HttpStatus.OK.value(), "users", userService.getAllUserWithSortByColumnAndSearch(page, size, search, sortBy));
 
     }
 
